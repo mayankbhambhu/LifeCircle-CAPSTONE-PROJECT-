@@ -1,0 +1,76 @@
+LIFECIRCLE - HOW TO PUT THE LIVE DEMO ONLINE (GITHUB PAGES)
+===========================================================
+
+Live demo address (after the steps below):
+https://mayankbhambhu.github.io/LifeCircle-CAPSTONE-PROJECT-/
+
+Why a 404 happens: GitHub Pages is switched off for a new repository, so
+GitHub has nothing to show at that address until you turn it on (Part A)
+and the publish workflow has run successfully once (Part B).
+
+
+PART A - TURN ON GITHUB PAGES (only needed once)
+------------------------------------------------
+1. Open the repository on GitHub:
+   https://github.com/mayankbhambhu/LifeCircle-CAPSTONE-PROJECT-
+2. Click "Settings" (the gear tab at the top right of the repository).
+3. In the left sidebar, under "Code and automation", click "Pages".
+4. Under "Build and deployment", find "Source".
+5. Change it to "GitHub Actions" (NOT "Deploy from a branch").
+   There is no Save button; it saves by itself.
+
+
+PART B - PUBLISH THE SITE
+-------------------------
+6. Click the "Actions" tab at the top of the repository.
+7. In the left list, click "Test and publish live demo".
+8. Click the "Run workflow" button on the right, keep branch "main",
+   then click the green "Run workflow" button.
+9. Wait about 2 minutes. Refresh the page. You should see a new run with
+   two jobs: "test" and "deploy". Both must show a green tick.
+10. Open the "deploy" job; it shows the live link. Or go to
+    Settings > Pages, where "Your site is live at ..." appears at the top.
+11. Open the live link. The first load takes 10 to 30 seconds because the
+    browser downloads Python. Then the LifeCircle login screen appears.
+
+
+FROM NOW ON
+-----------
+- Every push to the "main" branch runs the tests and re-publishes the site
+  automatically. You only repeat Part B by hand if you want to force it.
+- Each visitor gets fresh demo data. Reloading the page resets the demo.
+
+
+IF SOMETHING GOES WRONG
+-----------------------
+- Still 404: check Part A says "GitHub Actions", then run Part B again.
+  A brand-new site can take up to 5 minutes to appear after a green run.
+- Red cross on "test": the code has a failing test. Click the job to read
+  the error. The site is only published when all tests pass.
+- Red cross on "deploy" saying Pages is not enabled: Part A was skipped.
+- Page stuck on "Starting LifeCircle...": refresh once. A school or office
+  network that blocks cdn.jsdelivr.net will stop Python from loading; try
+  mobile data.
+
+
+RUN IT ON YOUR OWN COMPUTER (no internet hosting needed)
+--------------------------------------------------------
+1. Install Python 3.11 or newer.
+2. In a terminal, inside the project folder:
+      python -m venv .venv
+      source .venv/bin/activate        (Windows: .venv\Scripts\activate)
+      pip install -r requirements.txt
+      uvicorn app.main:app --reload
+3. Open http://127.0.0.1:8000 (app) or http://127.0.0.1:8000/docs (API).
+4. Run the tests:  python -m pytest -q
+
+
+HOW THE LIVE DEMO WORKS (for the viva)
+--------------------------------------
+GitHub Pages can only host static files; it cannot run a Python server.
+So the page loads Pyodide (Python compiled to WebAssembly) and runs the
+same FastAPI app inside the visitor's browser. Files involved:
+  .github/workflows/pages.yml   runs tests, builds and publishes the site
+  scripts/build_site.py         copies the frontend + Python code into site/
+  web/pyodide-backend.js        starts Python in the browser
+  app/browser.py                connects the page to the FastAPI app
