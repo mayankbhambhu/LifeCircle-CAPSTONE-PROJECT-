@@ -43,6 +43,9 @@ FROM NOW ON
 
 IF SOMETHING GOES WRONG
 -----------------------
+- Do NOT use "Re-run" on an old red run: it re-runs that run's OLD code
+  and will fail the same way. Always use "Run workflow" (step 8), which
+  uses the latest code on main.
 - Still 404: check Part A says "GitHub Actions", then run Part B again.
   A brand-new site can take up to 5 minutes to appear after a green run.
 - Red cross on "test": the code has a failing test. Click the job to read
