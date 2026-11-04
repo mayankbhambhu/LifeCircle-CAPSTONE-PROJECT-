@@ -29,7 +29,7 @@ Run the tests: `pytest -q`
 ## How the core logic works
 | Piece | File | In one line |
 |---|---|---|
-| Eligibility pre-check | `app/services/eligibility.py` | verified + 90/120-day gap + not deferred + ABO/Rh compatible |
+| Eligibility pre-check | `app/services/eligibility.py` | Indian NBTC rules (age 18–65, ≥45 kg, 90/120-day gap) + not deferred + verified + ABO/Rh compatible |
 | Fair rotation | `app/services/rotation.py` | fewest donations to this patient in 12 months, then longest since last turn, then best reliability |
 | Planned mode | `app/services/scheduling.py` | next date = last + cycle; confirmed + backup; cancel promotes backup; uncovered date goes to the blood bank |
 | Urgent mode | `app/services/urgent.py` | blood bank approves, circle alerted, after 15 min nearby donors within 10 km ranked by distance, first accept wins |

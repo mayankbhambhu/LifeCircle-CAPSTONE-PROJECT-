@@ -49,6 +49,8 @@ User ──< Notification, AuthSession
 |---|---|---|
 | id, user_id | FK → User | |
 | blood_group, sex | | sex sets the minimum donation gap (90 / 120 days) |
+| date_of_birth | date | Indian guideline: age 18 to 65; first-time donors not over 60 |
+| weight_kg | float | Indian guideline: at least 45 kg |
 | lat, lng | float | home location, used only if the donor allows it |
 | last_donation_date | date | drives eligibility |
 | deferred_until | date | set when staff record "Deferred" |

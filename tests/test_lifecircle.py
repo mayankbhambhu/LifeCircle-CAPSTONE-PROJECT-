@@ -52,6 +52,23 @@ def test_eligibility_compatibility_verification_and_deferral():
     assert not eligibility.check(d, date(2026, 11, 3), "B+").eligible
 
 
+def test_indian_guidelines_age_and_weight():
+    on = date(2026, 11, 3)
+    d = Donor(blood_group="B+", sex=Sex.male, verified=True, lat=0, lng=0, weight_kg=60,
+              date_of_birth=date(2008, 11, 4), last_donation_date=None)
+    assert "under 18 (age 17)" in eligibility.check(d, on).reasons
+    d.date_of_birth = date(2008, 11, 3)
+    assert eligibility.check(d, on).eligible                      # 18 today
+    d.date_of_birth = date(1964, 1, 1)                            # 62, never donated
+    assert "first-time donor over 60" in eligibility.check(d, on).reasons
+    d.last_donation_date = date(2025, 1, 1)                       # 62, repeat donor
+    assert eligibility.check(d, on).eligible
+    d.date_of_birth = date(1960, 1, 1)                            # 66
+    assert "over 65 (age 66)" in eligibility.check(d, on).reasons
+    d.date_of_birth, d.weight_kg = date(1990, 1, 1), 44.5
+    assert "weight under 45 kg" in eligibility.check(d, on).reasons
+
+
 def test_haversine_known_distance():
     # Connaught Place to India Gate is about 2.4 km in a straight line
     assert 2.0 < geo.haversine_km(28.6315, 77.2167, 28.6129, 77.2295) < 2.6
@@ -128,7 +145,9 @@ def test_urgent_circle_first_then_nearby_ranked_by_distance(c):
     assert names == ["Rahul Verma", "Ananya Singh", "Ishaan Gupta", "Vikram Joshi", "Sneha Kapoor"]
     assert [x["distance_km"] for x in nearby] == sorted(x["distance_km"] for x in nearby)
     # filtered out: unverified, gave recently, alerts off, location off, incompatible, too far
-    for skipped in ["Pooja Nair", "Arjun Reddy", "Kavya Iyer", "Farhan Ali", "Rohit Das", "Tanvi Shah", "Manish Yadav"]:
+    # and the Indian (NBTC) rules: under 18, first-time donor over 60, under 45 kg
+    for skipped in ["Pooja Nair", "Arjun Reddy", "Kavya Iyer", "Farhan Ali", "Rohit Das", "Tanvi Shah", "Manish Yadav",
+                    "Kabir Malhotra", "Leela Bose", "Sameer Khan"]:
         assert skipped not in names
 
     alert = c.get("/donor/alerts", headers=as_(c, "Ishaan Gupta")).json()[0]

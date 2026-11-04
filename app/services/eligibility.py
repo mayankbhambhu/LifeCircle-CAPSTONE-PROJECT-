@@ -3,13 +3,20 @@
 This is a *preliminary* filter that uses recorded dates only. The final medical
 eligibility decision is always made by blood bank staff at screening.
 
-Rules used (configurable below):
+Rules follow the Government of India "Guidelines for Blood Donor Selection &
+Blood Donor Referral" (National Blood Transfusion Council / MoHFW, 2017), for
+whole-blood donation, limited to what can be checked from recorded data:
+  * Age 18 to 65 on the donation date. First-time donors over 60 are not accepted.
+  * Weight at least 45 kg (enough for a 350 ml unit; 450 ml needs 55 kg).
   * Minimum gap between whole-blood donations: 90 days (male), 120 days (female).
-    These follow common Indian (NBTC) whole-blood guidance; change them here if
-    your blood bank uses different numbers.
   * A donor marked "Deferred" by staff is not eligible until `deferred_until`.
+Plus LifeCircle's own rules:
   * Only blood-bank-verified donors enter matching.
   * Red-cell ABO/Rh compatibility between donor and patient.
+
+Haemoglobin (at least 12.5 g/dL), blood pressure, pulse, temperature, illness,
+medication and travel history are checked at the blood bank on the day; the
+app does not record them and does not make the final decision.
 """
 from __future__ import annotations
 
@@ -19,7 +26,14 @@ from datetime import date, timedelta
 from app.models import Donor, Sex
 
 MIN_INTERVAL_DAYS = {Sex.male: 90, Sex.female: 120}
+MIN_AGE, MAX_AGE, MAX_AGE_FIRST_TIME = 18, 65, 60
+MIN_WEIGHT_KG = 45
 DEFAULT_DEFERRAL_DAYS = 30
+
+
+def age_on(dob: date, on_date: date) -> int:
+    return on_date.year - dob.year - ((on_date.month, on_date.day) < (dob.month, dob.day))
+
 
 # recipient blood group -> donor groups whose red cells it can receive
 COMPATIBLE_DONORS: dict[str, set[str]] = {
@@ -61,6 +75,16 @@ def check(donor: Donor, on_date: date, patient_group: str | None = None) -> Elig
     eligible_from = next_eligible_date(donor)
     if not donor.verified:
         reasons.append("not verified by blood bank")
+    if donor.date_of_birth:
+        age = age_on(donor.date_of_birth, on_date)
+        if age < MIN_AGE:
+            reasons.append(f"under {MIN_AGE} (age {age})")
+        elif age > MAX_AGE:
+            reasons.append(f"over {MAX_AGE} (age {age})")
+        elif age > MAX_AGE_FIRST_TIME and donor.last_donation_date is None:
+            reasons.append(f"first-time donor over {MAX_AGE_FIRST_TIME}")
+    if donor.weight_kg is not None and donor.weight_kg < MIN_WEIGHT_KG:
+        reasons.append(f"weight under {MIN_WEIGHT_KG} kg")
     if eligible_from > on_date:
         if donor.deferred_until and donor.deferred_until == eligible_from:
             reasons.append(f"deferred until {eligible_from.isoformat()}")

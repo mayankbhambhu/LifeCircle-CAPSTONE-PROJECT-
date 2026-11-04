@@ -2,7 +2,7 @@
 
 ## What the prototype does
 - Calculates the next transfusion date from the patient's cycle.
-- Pre-checks donor eligibility from recorded dates (90-day gap for men, 120 for women, deferrals, verification, ABO/Rh compatibility).
+- Pre-checks donor eligibility using the Government of India NBTC donor selection guidelines (2017) where they can be checked from records: age 18 to 65 (first-time donors not over 60), weight at least 45 kg, 90-day gap for men and 120 for women, plus staff deferrals, blood bank verification and ABO/Rh compatibility.
 - Rotates the donor circle fairly and picks a confirmed donor and a backup.
 - Promotes the backup when the confirmed donor cancels, and tells the family.
 - Hands an uncovered date or an urgent need to the blood bank, alerts the circle first, then nearby eligible donors ranked by straight-line distance, and confirms the first to accept.
@@ -11,7 +11,7 @@
 
 ## What it does not do
 - **Does not diagnose or give medical advice.**
-- **Does not make the final eligibility decision.** Our check uses recorded dates only; haemoglobin, weight, illness, travel and medication screening happen at the blood bank.
+- **Does not make the final eligibility decision.** Our check uses recorded data only; haemoglobin (at least 12.5 g/dL), blood pressure, pulse, temperature, illness, travel and medication screening happen at the blood bank on the day.
 - **Does not do cross-matching or replace compatibility testing.** Blood-group matching in the app is a pre-filter.
 - **Does not guarantee a donor or a blood supply.**
 - **Does not manage blood bank inventory** or component separation (packed red cells, platelets).

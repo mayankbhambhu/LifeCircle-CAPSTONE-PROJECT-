@@ -136,6 +136,8 @@ class Donor(Base):
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), unique=True)
     blood_group: Mapped[str] = mapped_column(String(3))
     sex: Mapped[Sex] = mapped_column(Enum(Sex))
+    date_of_birth: Mapped[date | None] = mapped_column(Date)   # NBTC: age 18-65
+    weight_kg: Mapped[float | None] = mapped_column(Float)     # NBTC: at least 45 kg
     lat: Mapped[float] = mapped_column(Float)
     lng: Mapped[float] = mapped_column(Float)
     last_donation_date: Mapped[date | None] = mapped_column(Date)

@@ -6,15 +6,16 @@ Dates are relative to "today" so the demo always looks the same:
     the other four circle donors gave recently and are not eligible yet.
   * Meera (O+, 28-day cycle) is due today and has a small circle of 3, so the
     family sees a small-circle warning and staff see her donor on "Today".
-  * 12 donors outside any circle live around the blood bank for urgent mode.
+  * 15 donors outside any circle live around the blood bank for urgent mode.
     Some are deliberately filtered out (unverified, gave recently, opted out of
-    alerts or location, wrong blood group, too far) to show the filters work.
+    alerts or location, wrong blood group, too far, under 18, first-timer over
+    60, under 45 kg) to show the filters work.
 
 Run:  python -m app.seed
 """
 from __future__ import annotations
 
-from datetime import timedelta
+from datetime import date, timedelta
 from math import cos, radians
 
 from sqlalchemy.orm import Session
@@ -44,38 +45,41 @@ def offset(km_north: float, km_east: float) -> tuple[float, float]:
     return round(lat, 6), round(lng, 6)
 
 
-# name, phone, group, sex, (km N, km E), last-donation days ago, verified, alerts, location
+# name, age, weight kg, phone, group, sex, (km N, km E), last-donation days ago, verified, alerts, location
 CIRCLE_AARAV = [
-    ("Amit Tiwari", "+91 98765 43210", "B+", Sex.male, (1.2, 0.0), 117, True, True, True),
-    ("Priya Sharma", "+91 98111 22334", "B+", Sex.female, (-1.5, 1.0), 138, True, True, True),
-    ("Sahil Khanna", "+91 98222 33445", "O+", Sex.male, (3.0, -2.0), 33, True, True, True),
-    ("Divya Menon", "+91 98333 44556", "B-", Sex.female, (-2.5, -2.5), 75, True, True, True),
-    ("Karan Patel", "+91 99887 76655", "B+", Sex.male, (0.0, 3.8), 12, True, True, True),
-    ("Neha Saxena", "+91 91234 56780", "O+", Sex.female, (2.0, 0.0), 54, True, True, True),
+    ("Amit Tiwari", 29, 72, "+91 98765 43210", "B+", Sex.male, (1.2, 0.0), 117, True, True, True),
+    ("Priya Sharma", 26, 55, "+91 98111 22334", "B+", Sex.female, (-1.5, 1.0), 138, True, True, True),
+    ("Sahil Khanna", 34, 80, "+91 98222 33445", "O+", Sex.male, (3.0, -2.0), 33, True, True, True),
+    ("Divya Menon", 31, 58, "+91 98333 44556", "B-", Sex.female, (-2.5, -2.5), 75, True, True, True),
+    ("Karan Patel", 40, 77, "+91 99887 76655", "B+", Sex.male, (0.0, 3.8), 12, True, True, True),
+    ("Neha Saxena", 28, 52, "+91 91234 56780", "O+", Sex.female, (2.0, 0.0), 54, True, True, True),
 ]
 CIRCLE_MEERA = [
-    ("Rajesh Kumar", "+91 97000 11111", "O+", Sex.male, (-3.0, 1.0), 95, True, True, True),
-    ("Deepa Pillai", "+91 97000 22222", "O-", Sex.female, (1.0, -4.0), 130, True, True, True),
-    ("Suresh Bhat", "+91 97000 33333", "O+", Sex.male, (4.0, 4.0), 40, True, True, True),
+    ("Rajesh Kumar", 45, 82, "+91 97000 11111", "O+", Sex.male, (-3.0, 1.0), 95, True, True, True),
+    ("Deepa Pillai", 38, 60, "+91 97000 22222", "O-", Sex.female, (1.0, -4.0), 130, True, True, True),
+    ("Suresh Bhat", 52, 74, "+91 97000 33333", "O+", Sex.male, (4.0, 4.0), 40, True, True, True),
 ]
 EXTERNAL = [
-    ("Rahul Verma", "+91 96000 00001", "B+", Sex.male, (1.2, 0.0), 200, True, True, True),
-    ("Ishaan Gupta", "+91 96000 00002", "O+", Sex.male, (0.0, 2.4), 150, True, True, True),
-    ("Ananya Singh", "+91 96000 00003", "B+", Sex.female, (-2.0, 0.0), 180, True, True, True),
-    ("Vikram Joshi", "+91 96000 00004", "O-", Sex.male, (2.7, 2.7), None, True, True, True),
-    ("Sneha Kapoor", "+91 96000 00005", "B-", Sex.female, (-5.0, 5.9), 300, True, True, True),
-    ("Pooja Nair", "+91 96000 00006", "B+", Sex.female, (4.5, 0.0), 200, False, True, True),   # unverified
-    ("Arjun Reddy", "+91 96000 00007", "B+", Sex.male, (0.0, -5.1), 20, True, True, True),     # gave recently
-    ("Kavya Iyer", "+91 96000 00008", "O+", Sex.female, (-6.3, 0.0), 200, True, False, True),  # alerts off
-    ("Farhan Ali", "+91 96000 00009", "O+", Sex.male, (6.0, -6.6), 200, True, True, False),    # location off
-    ("Rohit Das", "+91 96000 00010", "A+", Sex.male, (1.0, 0.0), 200, True, True, True),      # incompatible
-    ("Tanvi Shah", "+91 96000 00011", "AB+", Sex.female, (0.0, 2.2), 200, True, True, True),  # incompatible
-    ("Manish Yadav", "+91 96000 00012", "B+", Sex.male, (14.0, 0.0), 200, True, True, True),  # too far
+    ("Rahul Verma", 24, 70, "+91 96000 00001", "B+", Sex.male, (1.2, 0.0), 200, True, True, True),
+    ("Ishaan Gupta", 22, 68, "+91 96000 00002", "O+", Sex.male, (0.0, 2.4), 150, True, True, True),
+    ("Ananya Singh", 27, 54, "+91 96000 00003", "B+", Sex.female, (-2.0, 0.0), 180, True, True, True),
+    ("Vikram Joshi", 33, 85, "+91 96000 00004", "O-", Sex.male, (2.7, 2.7), None, True, True, True),
+    ("Sneha Kapoor", 30, 57, "+91 96000 00005", "B-", Sex.female, (-5.0, 5.9), 300, True, True, True),
+    ("Pooja Nair", 25, 50, "+91 96000 00006", "B+", Sex.female, (4.5, 0.0), 200, False, True, True),   # unverified
+    ("Arjun Reddy", 36, 78, "+91 96000 00007", "B+", Sex.male, (0.0, -5.1), 20, True, True, True),     # gave recently
+    ("Kavya Iyer", 29, 53, "+91 96000 00008", "O+", Sex.female, (-6.3, 0.0), 200, True, False, True),  # alerts off
+    ("Farhan Ali", 41, 76, "+91 96000 00009", "O+", Sex.male, (6.0, -6.6), 200, True, True, False),    # location off
+    ("Rohit Das", 23, 66, "+91 96000 00010", "A+", Sex.male, (1.0, 0.0), 200, True, True, True),      # incompatible
+    ("Tanvi Shah", 26, 49, "+91 96000 00011", "AB+", Sex.female, (0.0, 2.2), 200, True, True, True),  # incompatible
+    ("Manish Yadav", 39, 81, "+91 96000 00012", "B+", Sex.male, (14.0, 0.0), 200, True, True, True),  # too far
+    ("Kabir Malhotra", 17, 62, "+91 96000 00013", "B+", Sex.male, (0.5, 0.5), None, True, True, True),   # under 18
+    ("Leela Bose", 62, 58, "+91 96000 00014", "O+", Sex.female, (-0.5, 0.8), None, True, True, True),  # first-time donor over 60
+    ("Sameer Khan", 28, 43, "+91 96000 00015", "B+", Sex.male, (0.8, -0.6), 200, True, True, True),   # under 45 kg
 ]
 
 
 def _donor(db: Session, row, today) -> Donor:
-    name, phone, group, sex, (n, e), last, verified, alerts, loc = row
+    name, age, weight, phone, group, sex, (n, e), last, verified, alerts, loc = row
     u = User(name=name, phone=phone, role=Role.donor)
     db.add(u)
     db.flush()
@@ -84,6 +88,8 @@ def _donor(db: Session, row, today) -> Donor:
         user_id=u.id,
         blood_group=group,
         sex=sex,
+        date_of_birth=date(today.year - age, 6, 15) if today.month > 6 else date(today.year - age - 1, 6, 15),
+        weight_kg=weight,
         lat=lat,
         lng=lng,
         last_donation_date=today - timedelta(days=last) if last is not None else None,
