@@ -24,4 +24,5 @@
 ## Known prototype limits
 - SQLite, one server process; the "first to accept wins" rule uses an atomic database update, but there is no real-time push (screens refresh on action).
 - The 15-minute escalation runs when a request is read, not on a background timer.
-- No account deletion or record-correction workflow yet (shown on the wireframe, not built).
+- Donors can delete their account (name and phone erased, past outcomes kept for the blood bank), but there is no "ask staff to fix a record" workflow yet.
+- On the live GitHub Pages demo, data lives only in your browser tab and resets when you reload.

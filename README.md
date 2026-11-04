@@ -2,6 +2,8 @@
 
 **LifeCircle plans blood donations in advance for regular-transfusion patients, and when a plan falls through, it finds the next eligible donor nearby in minutes.**
 
+**Live demo: https://mayankbhambhu.github.io/LifeCircle-CAPSTONE-PROJECT-/** (the real Python backend runs inside your browser with Pyodide; first load takes 10 to 30 seconds, and every visitor gets fresh demo data)
+
 Capstone prototype (Milestone 2): Python / FastAPI backend, SQLite, and a plain HTML/JS demo app for the three roles: patient family, donor and blood bank staff. All data is seeded and fictional.
 
 | Family home | Donor urgent alert | Staff: choose a donor |
@@ -20,7 +22,11 @@ To freeze the date so it matches the wireframes: `LIFECIRCLE_TODAY=2026-11-03 uv
 
 Run the tests: `pytest -q`
 
+## Live demo on GitHub Pages
+GitHub Pages only hosts static files, so the live site loads Python compiled to WebAssembly ([Pyodide](https://pyodide.org)) and runs this same FastAPI app in the browser (`app/browser.py`, `web/pyodide-backend.js`). The workflow in `.github/workflows/pages.yml` runs the tests and publishes the site on every push to `main`. Build it locally with `python scripts/build_site.py`.
+
 ## Milestone 2 deliverables
+- [Milestone 2 presentation](docs/presentations/LifeCircle_Milestone2.pptx)
 - [Data models](docs/DATA_MODELS.md)
 - [Network / endpoint requests](docs/API_ENDPOINTS.md)
 - [Demo script](docs/DEMO_SCRIPT.md)

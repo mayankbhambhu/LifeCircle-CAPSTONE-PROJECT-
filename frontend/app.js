@@ -10,13 +10,25 @@ const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "
 const fmtDate = (d) => new Date(d).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
 const fmtDT = (d) => new Date(d).toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
 
+// Talks to the FastAPI server, or (on the live GitHub Pages demo) to the same
+// FastAPI app running in the browser through window.LC_BACKEND.
 async function api(path, opts = {}) {
-  const headers = { "Content-Type": "application/json" };
-  if (session) headers.Authorization = "Bearer " + session.token;
-  const res = await fetch(path, { ...opts, headers, body: opts.body ? JSON.stringify(opts.body) : undefined });
-  const data = await res.json().catch(() => ({}));
-  if (res.status === 401 && session) { logout(); throw new Error("Signed out"); }
-  if (!res.ok) throw new Error(typeof data.detail === "string" ? data.detail : JSON.stringify(data.detail || data));
+  const auth = session ? "Bearer " + session.token : "";
+  const body = opts.body ? JSON.stringify(opts.body) : "";
+  let status, data;
+  if (window.LC_BACKEND) {
+    const r = await window.LC_BACKEND.request(opts.method || "GET", path, auth, body);
+    status = r.status;
+    try { data = JSON.parse(r.text || "{}"); } catch { data = {}; }
+  } else {
+    const headers = { "Content-Type": "application/json" };
+    if (auth) headers.Authorization = auth;
+    const res = await fetch(path.replace(/^\//, ""), { method: opts.method || "GET", headers, body: body || undefined });
+    status = res.status;
+    data = await res.json().catch(() => ({}));
+  }
+  if (status === 401 && session) { logout(); throw new Error("Signed out"); }
+  if (status >= 400) throw new Error(typeof data.detail === "string" ? data.detail : JSON.stringify(data.detail || data));
   return data;
 }
 
@@ -181,7 +193,9 @@ const DONOR = {
       ${t("urgent_alerts_enabled", "Urgent alerts from nearby")}
       <div class="card"><div class="label">Your record</div><div class="big">${esc(r.showed_up)}</div>
         <div>showed up when expected</div><div class="label">${esc(r.rule)}</div></div>
-      ${r.history.map((x) => `<div class="list-item">${fmtDate(x.date)} · ${esc(x.outcome.replace("_", "-"))}${x.reason ? " (" + esc(x.reason) + ")" : ""}</div>`).join("")}`;
+      ${r.history.map((x) => `<div class="list-item">${fmtDate(x.date)} · ${esc(x.outcome.replace("_", "-"))}${x.reason ? " (" + esc(x.reason) + ")" : ""}</div>`).join("")}
+      <button class="secondary" id="delacct" style="margin-top:20px">Delete my account and number</button>
+      <p class="note">Your upcoming slots are cancelled and backups promoted. The blood bank keeps past outcomes without your name.</p>`;
   },
   async updates() {
     const n = await api("/donor/notifications");
@@ -195,6 +209,12 @@ function bindDonor() {
   document.querySelectorAll("[data-cancel]").forEach((b) => (b.onclick = () => act(() => api(`/donor/appointments/${b.dataset.cancel}/cancel`, { method: "POST" }), (r) => r.events.join(". "))));
   document.querySelectorAll("[data-accept]").forEach((b) => (b.onclick = () => act(() => api(`/donor/alerts/${b.dataset.accept}/accept`, { method: "POST" }), (r) => r.message)));
   document.querySelectorAll("[data-decline]").forEach((b) => (b.onclick = () => act(() => api(`/donor/alerts/${b.dataset.decline}/decline`, { method: "POST" }), "No problem")));
+  const del = document.getElementById("delacct");
+  if (del) del.onclick = async () => {
+    if (!confirm("Delete your LifeCircle account and phone number? This cannot be undone.")) return;
+    try { await api("/donor/account", { method: "DELETE" }); toast("Account deleted"); } catch (e) { toast(e.message); }
+    logout();
+  };
   document.querySelectorAll("[data-p]").forEach((i) => (i.onchange = () => act(() => api("/donor/privacy", { method: "PUT", body: { [i.dataset.p]: i.checked } }), "Saved")));
 }
 
@@ -272,6 +292,10 @@ const ROLES = {
 };
 
 async function render() {
+  if (window.LC_BACKEND) {
+    try { await window.LC_BACKEND.ready; }
+    catch (e) { $app.innerHTML = `<p class="warn">Could not start the demo: ${esc(e.message)}. Please refresh.</p>`; return; }
+  }
   tickClock().catch(() => {});
   if (!session) return loginScreen();
   document.getElementById("logout").hidden = false;

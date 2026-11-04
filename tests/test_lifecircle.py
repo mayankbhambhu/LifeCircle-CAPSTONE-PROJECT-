@@ -212,3 +212,15 @@ def test_otp_login(c):
     assert c.post("/auth/login", json={"phone": "+91 90000 00001", "otp": "0000"}).status_code == 401
     ok = c.post("/auth/login", json={"phone": "+91 90000 00001", "otp": "1234"}).json()
     assert ok["role"] == "family"
+
+
+def test_donor_can_delete_account(c):
+    amit = as_(c, "Amit Tiwari")
+    r = c.delete("/donor/account", headers=amit).json()
+    assert r == {"deleted": True, "cancelled_appointments": 1}
+    assert c.get("/donor/home", headers=amit).status_code == 401          # signed out for good
+    h = c.get("/family/home", headers=as_(c, "Rohan Mehta")).json()
+    assert h["confirmed"]["name"] == "Priya"                              # backup promoted
+    assert "Amit" not in [m["name"] for m in h["circle"]]                 # left the circle
+    staff = c.get("/staff/donors", headers=as_(c, "R. Kumar")).text
+    assert "98765 43210" not in staff and "Amit Tiwari" not in staff      # number and name erased

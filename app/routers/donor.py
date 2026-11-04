@@ -13,6 +13,7 @@ from app.models import (
     AlertStatus,
     Appointment,
     AppointmentStatus,
+    AuthSession,
     CircleMember,
     DonationRecord,
     Donor,
@@ -199,6 +200,36 @@ def my_record(user: User = Depends(donor_only), db: Session = Depends(get_db)):
         "rule": "Only a no-show counts. Excused and deferred never count against you.",
         "history": [{"date": r.on_date, "outcome": r.outcome.value, "reason": r.reason} for r in rows],
     }
+
+
+@router.delete("/account")
+def delete_my_account(user: User = Depends(donor_only), db: Session = Depends(get_db)):
+    """"Delete my account and number" (wireframe 7).
+
+    Upcoming slots are cancelled first, so backups are promoted as usual. The
+    donor leaves every circle, their phone number and name are erased and they
+    can no longer sign in. Past donation outcomes stay, without the name, because
+    the blood bank must keep its records.
+    """
+    d = me(db, user)
+    upcoming = db.scalars(
+        select(Appointment).where(Appointment.donor_id == d.id, Appointment.status.in_(scheduling.ACTIVE))
+    ).all()
+    for a in upcoming:
+        scheduling.cancel(db, a)
+    for m in db.scalars(select(CircleMember).where(CircleMember.donor_id == d.id)).all():
+        db.delete(m)
+    for a in _open_alerts(db, d):
+        a.status = AlertStatus.declined
+    for s in db.scalars(select(AuthSession).where(AuthSession.user_id == user.id)).all():
+        db.delete(s)
+    user.name = "Deleted donor"
+    user.phone = f"deleted-{user.id}"
+    d.lat = d.lng = 0.0
+    d.verified = False
+    d.urgent_alerts_enabled = d.share_location_for_urgent = d.show_next_eligible_to_staff = False
+    db.commit()
+    return {"deleted": True, "cancelled_appointments": len(upcoming)}
 
 
 @router.get("/notifications")

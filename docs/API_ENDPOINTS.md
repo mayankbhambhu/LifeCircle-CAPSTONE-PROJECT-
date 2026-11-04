@@ -1,6 +1,7 @@
 # Milestone 2 · Network / endpoint requests
 
-All endpoints are live in the prototype. Open `http://127.0.0.1:8000/docs` for interactive Swagger docs.
+All endpoints are live in the prototype: **27 role-locked endpoints** (family 6, donor 11, staff 10), plus 2 sign-in endpoints and 5 demo helpers.
+Open `http://127.0.0.1:8000/docs` for interactive Swagger docs, or try the [live demo](https://mayankbhambhu.github.io/LifeCircle-CAPSTONE-PROJECT-/).
 Every call except sign-in sends `Authorization: Bearer <token>`. Calling another role's endpoint returns **403**.
 
 User stories referenced below are from the Milestone 1 deck: F = family, D = donor, S = staff.
@@ -33,6 +34,7 @@ User stories referenced below are from the Milestone 1 deck: F = family, D = don
 | Read / Update | GET / PUT | `/donor/privacy` | three sharing toggles | D4 |
 | Read | GET | `/donor/record` | "showed up 4 of 5" + history | D3 |
 | Read | GET | `/donor/notifications` | reminders and alerts | D2 |
+| Delete | DELETE | `/donor/account` | "Delete my account and number": cancels upcoming slots (backups promoted), leaves circles, erases name and phone | D4 |
 
 ## Blood bank staff
 | CRUD | Verb | Endpoint | Description | Stories |
