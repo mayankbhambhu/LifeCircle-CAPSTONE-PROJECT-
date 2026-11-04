@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>LifeCircle</title>
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+  <div class="demo-bar">
+    <span><b>DEMO</b> · seeded, fictional data · no real messages are sent</span>
+    <span class="demo-actions">
+      <span id="clock"></span>
+      <button data-advance="15">+15 min</button>
+      <button data-advance-days="1">+1 day</button>
+      <button id="reset">Reset demo</button>
+      <button id="logout" hidden>Switch user</button>
+    </span>
+  </div>
+  <main id="app"></main>
+  <nav id="tabs" hidden></nav>
+  <div id="toast" hidden></div>
+  <script src="/static/app.js"></script>
+</body>
+</html>
